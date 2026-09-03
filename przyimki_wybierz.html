@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+  <html lang="pl">
+  <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Statyczne czy dynamiczne - wybierz formę</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;900&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#15130f; --bg-soft:#1c1a15; --card:#211f19; --card-border:#34302a;
+    --gold:#e2b34f; --gold-dim:#7a6431; --text:#f2ede1; --text-dim:#a89d88;
+          --ok:#6fae72; --bad:#b5555a;
+      }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+        background:radial-gradient(ellipse 900px 500px at 50% -10%, rgba(226,179,79,0.10), transparent 60%), var(--bg);
+    color:var(--text); font-family:'Inter',sans-serif; min-height:100vh; padding:32px 16px 80px;
+}
+  .wrap{max-width:680px;margin:0 auto;}
+  header{text-align:center;margin-bottom:8px;}
+  .eyebrow{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.22em;text-transform:uppercase;color:var(--gold-dim);margin-bottom:10px;}
+  h1{font-family:'Playfair Display',serif;font-weight:900;font-size:clamp(24px,5vw,34px);margin:0 0 10px;letter-spacing:-0.01em;}
+  h1 em{color:var(--gold);font-style:normal;}
+  .instructions{color:var(--text-dim);font-size:15px;max-width:520px;margin:0 auto;line-height:1.5;}
+  .progress-wrap{max-width:460px;margin:22px auto 32px;}
+  .progress-label{display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-dim);letter-spacing:0.05em;margin-bottom:6px;}
+  .progress-label b{color:var(--gold);}
+  .progress-bar{height:6px;border-radius:4px;background:var(--bg-soft);border:1px solid var(--card-border);overflow:hidden;}
+  .progress-fill{height:100%;background:linear-gradient(90deg,var(--gold-dim),var(--gold));width:0%;transition:width .4s ease;}
+  .cards{display:flex; flex-direction:column; gap:14px;}
+  .card{background:var(--card); border:1px solid var(--card-border); border-radius:12px;padding:20px 22px;}
+  .stmt{font-size:16px; line-height:1.6; color:var(--text); margin-bottom:16px;}
+  .stmt .blank{display:inline-block; min-width:70px; border-bottom:2px dashed var(--gold-dim); text-align:center;}
+  .buttons{display:flex; gap:10px;}
+  .btn{flex:1; font-family:'Playfair Display',serif; font-weight:700; font-size:15px;padding:11px 0; border-radius:8px; cursor:pointer;background:var(--bg-soft); border:1.5px solid var(--card-border); color:var(--text);transition:border-color .15s ease, background .15s ease;}
+  .btn:hover:not(:disabled){border-color:var(--gold-dim);}
+  .btn:disabled{cursor:default;}
+  .btn.correct{border-color:var(--ok); background:rgba(111,174,114,0.12); color:var(--ok);}
+  .btn.wrong{border-color:var(--bad); background:rgba(181,85,90,0.12); color:var(--bad);}
+  .explanation{display:none; margin-top:14px; padding:12px 14px; border-radius:8px;background:rgba(226,179,79,0.06); border:1px solid var(--gold-dim);color:var(--text-dim); font-size:13.5px; line-height:1.5;}
+  .explanation.show{display:block;}
+  .explanation b{color:var(--gold);}
+  .finale{display:none; text-align:center; margin-top:36px; padding:30px;border:1px solid var(--gold-dim); border-radius:14px;background:radial-gradient(ellipse at 50% 0%, rgba(226,179,79,0.08), transparent 70%);}
+  .finale.show{display:block;}
+  .finale .big{font-family:'Playfair Display',serif;font-weight:900;font-size:26px;color:var(--gold);margin-bottom:8px;}
+  .finale p{color:var(--text-dim);margin:0 0 18px;font-size:14px;}
+  .reset-btn{background:transparent;border:1px solid var(--card-border);color:var(--text-dim);font-family:'Inter',sans-serif;font-size:13px;font-weight:600;padding:10px 22px;border-radius:20px;cursor:pointer;}
+  .reset-btn:hover{border-color:var(--gold); color:var(--gold);}
+</style>
+</head>
+  <body>
+  <div class="wrap">
+    <header>
+      <div class="eyebrow">Werba Way · Gramatyka</div>
+    <h1>Statyczne <em>czy</em> dynamiczne?</h1>
+    <p class="instructions">Wybierz właściwą formę rzeczownika — czy chodzi o miejsce (gdzie?), czy o kierunek ruchu (dokąd?)?</p>
+  </header>
+    <div class="progress-wrap">
+      <div class="progress-label"><span>Postęp</span><span><b id="progressCount">0</b> / <span id="progressTotal">0</span></span></div>
+      <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    </div>
+    <div class="cards" id="cards"></div>
+    <div class="finale" id="finale">
+      <div class="big">Świetnie! 🧭</div>
+      <p>Odpowiedziałeś/aś na wszystkie pytania.</p>
+      <button class="reset-btn" id="resetBtn">Zacznij od nowa</button>
+  </div>
+</div>
+<script>
+const items = [
+{ before: "Urlop spędzali nad", blank: "___", after: ". (morze)", opts: ["morze", "morzem"], correct: "morzem", ex: "Spędzali urlop <b>gdzie?</b> — nad morzem. To stan, miejsce — Instrumental." },
+  { before: "Jutro jedziemy nad", blank: "___", after: ". (morze)", opts: ["morze", "morzem"], correct: "morze", ex: "Jedziemy <b>dokąd?</b> — nad morze. To kierunek ruchu — Biernik (Accusative)." },
+{ before: "Książka leży na", blank: "___", after: ". (stół)", opts: ["stole", "stół"], correct: "stole", ex: "Leży <b>gdzie?</b> — na stole. Miejsce — Miejscownik (Locative)." },
+{ before: "Połóż książkę na", blank: "___", after: ". (stół)", opts: ["stole", "stół"], correct: "stół", ex: "Połóż <b>dokąd?</b> — na stół. Kierunek — Biernik (Accusative)." },
+{ before: "Kot śpi pod", blank: "___", after: ". (łóżko)", opts: ["łóżkiem", "łóżko"], correct: "łóżkiem", ex: "Śpi <b>gdzie?</b> — pod łóżkiem. Miejsce — Instrumental." },
+{ before: "Kot wszedł pod", blank: "___", after: ". (łóżko)", opts: ["łóżkiem", "łóżko"], correct: "łóżko", ex: "Wszedł <b>dokąd?</b> — pod łóżko. Kierunek — Biernik." },
+{ before: "Samochód stoi przed", blank: "___", after: ". (dom)", opts: ["domem", "dom"], correct: "domem", ex: "Stoi <b>gdzie?</b> — przed domem. Miejsce — Instrumental." },
+{ before: "Samochód podjechał przed", blank: "___", after: ". (dom)", opts: ["domem", "dom"], correct: "dom", ex: "Podjechał <b>dokąd?</b> — przed dom. Kierunek — Biernik." },
+{ before: "Dzieci bawią się za", blank: "___", after: ". (szkoła)", opts: ["szkołą", "szkołę"], correct: "szkołą", ex: "Bawią się <b>gdzie?</b> — za szkołą. Miejsce — Instrumental." },
+{ before: "Piłka wpadła za", blank: "___", after: ". (szkoła)", opts: ["szkołą", "szkołę"], correct: "szkołę", ex: "Wpadła <b>dokąd?</b> — za szkołę. Kierunek — Biernik." }
+];
+
+let answeredCount = 0;
+const total = items.length;
+
+const cardsEl = document.getElementById('cards');
+const progressCount = document.getElementById('progressCount');
+const progressTotal = document.getElementById('progressTotal');
+const progressFill = document.getElementById('progressFill');
+const finale = document.getElementById('finale');
+
+function build(){
+    answeredCount = 0;
+  progressTotal.textContent = total;
+  progressCount.textContent = 0;
+  progressFill.style.width = '0%';
+  finale.classList.remove('show');
+  cardsEl.innerHTML = '';
+
+  items.forEach((item, idx) => {
+        const card = document.createElement('div');
+        card.className = 'card';
+    const sentence = `${item.before} <span class="blank" data-idx="${idx}">?</span>${item.after}`;
+    card.innerHTML = `
+            <div class="stmt">${idx + 1}. ${sentence}</div>
+            <div class="buttons">
+              <button class="btn" data-word="${item.opts[0]}">${item.opts[0]}</button>
+              <button class="btn" data-word="${item.opts[1]}">${item.opts[1]}</button>
+            </div>
+            <div class="explanation"><b>Dlaczego?</b> ${item.ex}</div>
+          `;
+    const blankEl = card.querySelector('.blank');
+    const buttons = card.querySelectorAll('.btn');
+    buttons.forEach(btn => {
+            btn.addEventListener('click', () => {
+              const chosen = btn.dataset.word;
+        buttons.forEach(b => b.disabled = true);
+        blankEl.textContent = chosen;
+        if(chosen === item.correct){
+          btn.classList.add('correct');
+        } else {
+          btn.classList.add('wrong');
+          buttons.forEach(b => {
+                        if(b.dataset.word === item.correct) b.classList.add('correct');
+        });
+        }
+        card.querySelector('.explanation').classList.add('show');
+        answeredCount++;
+        progressCount.textContent = answeredCount;
+        progressFill.style.width = (answeredCount / total * 100) + '%';
+        if(answeredCount === total){
+          setTimeout(() => finale.classList.add('show'), 300);
+        }
+});
+});
+    cardsEl.appendChild(card);
+});
+}
+
+document.getElementById('resetBtn').addEventListener('click', build);
+
+build();
+</script>
+  </body>
+  </html>
+  
